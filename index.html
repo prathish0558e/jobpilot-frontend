@@ -279,45 +279,54 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 </script>
 
 <!-- ── LOGIN PAGE ── -->
-<div id="lp">
-  <div class="lb">
-    <div class="lb-glow"></div>
-    <div class="lb-logo">Job<b>Pilot</b></div>
-    <div class="lb-tag" style="margin-top:4px">AI-powered job automation — 24×7</div>
-    <div class="lb-features">
-      <div class="lb-feat"><span>⚡</span> Auto-apply to 50+ job portals</div>
-      <div class="lb-feat"><span>🤖</span> Gemini AI resume per job</div>
-      <div class="lb-feat"><span>✉️</span> Auto email HRs with AI emails</div>
-      <div class="lb-feat"><span>📍</span> Nearby part-time job finder</div>
-      <div class="lb-feat"><span>📬</span> Smart inbox — replies only</div>
+<div id="lp" style="position:fixed;inset:0;background:#08080f;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#0f0f18;border:1px solid #ffffff20;border-radius:24px;padding:40px 36px;width:100%;max-width:400px;text-align:center;position:relative">
+    
+    <!-- Glow -->
+    <div style="position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(#7c6fff33,transparent 70%);pointer-events:none"></div>
+    
+    <!-- Logo -->
+    <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:-.05em;margin-bottom:4px">Job<span style="color:#7c6fff">Pilot</span></div>
+    <div style="color:#44445a;font-size:.84rem;margin-bottom:24px">AI-powered job automation — 24×7</div>
+    
+    <!-- Features -->
+    <div style="text-align:left;margin-bottom:28px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:#8888aa"><span>⚡</span> Auto-apply to 50+ job portals</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:#8888aa"><span>🤖</span> Gemini AI resume builder</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:#8888aa"><span>✉️</span> Auto email HRs with AI</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:#8888aa"><span>📍</span> Nearby part-time job finder</div>
     </div>
 
-    <!-- GSI Official Button -->
-    <div id="gsi-btn-wrap" style="display:flex;justify-content:center;min-height:44px;margin-bottom:8px"></div>
+    <!-- GSI Button Container -->
+    <div id="gsi-btn-wrap" style="display:flex;justify-content:center;margin-bottom:12px;min-height:44px"></div>
 
-    <!-- Fallback button — always visible until GSI loads -->
-    <button class="google-btn" onclick="startGoogleLogin()" id="login-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+    <!-- Custom Google Button — always visible, no iframe issues -->
+    <button id="login-btn" onclick="triggerGoogleLogin()" style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px;border-radius:12px;background:#1c1c28;border:1px solid #ffffff25;color:#eeeef8;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;cursor:pointer;transition:all .2s;outline:none" onmouseover="this.style.background='#252535'" onmouseout="this.style.background='#1c1c28'">
+      <svg width="20" height="20" viewBox="0 0 24 24" style="flex-shrink:0">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
       Continue with Google
     </button>
 
-    <p class="lb-terms">
+    <!-- Terms -->
+    <p style="font-size:.68rem;color:#44445a;margin-top:14px;line-height:1.7">
       By continuing you agree to our
-      <a href="#" onclick="showLoginModal('terms');return false;">Terms</a> &
-      <a href="#" onclick="showLoginModal('privacy');return false;">Privacy Policy</a>.<br>
-      Your data is encrypted. We never sell or share it.
+      <a href="#" onclick="showLoginModal('terms');return false;" style="color:#7c6fff;text-decoration:none">Terms</a> &
+      <a href="#" onclick="showLoginModal('privacy');return false;" style="color:#7c6fff;text-decoration:none">Privacy Policy</a>
     </p>
   </div>
 </div>
 
-<!-- Mini modal for Terms/Privacy on login page -->
-<div id="lp-modal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#000000bb;z-index:2000;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#0f0f18;border:1px solid #ffffff20;border-radius:20px;padding:28px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;position:relative;scrollbar-width:thin">
+<!-- Terms/Privacy Modal -->
+<div id="lp-modal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#000000bb;z-index:99999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#0f0f18;border:1px solid #ffffff20;border-radius:20px;padding:28px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;position:relative">
     <button onclick="document.getElementById('lp-modal').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:#8888aa;cursor:pointer;font-size:20px;line-height:1">✕</button>
     <div id="lp-modal-content"></div>
   </div>
 </div>
-
 <!-- ── SIDEBAR ── -->
 <div id="sidebar">
   <div class="logo">
@@ -853,132 +862,67 @@ let generatedResume = '';
 let autoRunning = false;
 
 // ══════════════════════════════════════════════════
-//  GOOGLE OAUTH
+//  GOOGLE AUTH — GSI Only (no manual OAuth)
 // ══════════════════════════════════════════════════
-// ── GSI callback — called by Google after user picks account ──
-function onGoogleCredential(response) {
-  // response.credential is a JWT ID token
-  if (!response.credential) { onDemoLogin(); return; }
 
-  // Decode JWT payload (base64) to get user info — no server needed for basic info
+// Called by Google GSI after user selects account
+function onGoogleCredential(response) {
+  if (!response || !response.credential) { onDemoLogin(); return; }
   try {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const parts = response.credential.split('.');
+    const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
     user = { name: payload.name, email: payload.email, id: payload.sub, avatar: payload.picture };
-    accessToken = response.credential; // ID token used for API calls
+    accessToken = response.credential;
     localStorage.setItem('jp_user', JSON.stringify(user));
     localStorage.setItem('jp_token', accessToken);
     finishLogin();
-    toast('✅ Welcome, ' + user.name.split(' ')[0] + '!', 'green');
-
-    // Send to backend to get Gmail access token (optional)
-    exchangeGSIToken(response.credential);
+    toast('Welcome, ' + user.name.split(' ')[0] + '!', 'green');
+    // Verify with backend
+    fetch(API + '/auth/google-gsi', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ idToken: response.credential })
+    }).catch(() => {});
   } catch(e) {
+    console.error('GSI error:', e);
     onDemoLogin();
   }
 }
 
-async function exchangeGSIToken(idToken) {
-  // Backend can exchange for Gmail scoped token if needed
-  try {
-    await fetch(API + '/auth/google-gsi', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken, userId: user.id })
-    });
-  } catch(e) { /* silent — Gmail features optional */ }
-}
-
-// Fallback manual OAuth (used if GSI fails)
 function startGoogleLogin() {
   if (window.google && window.google.accounts && window.google.accounts.id) {
-    google.accounts.id.prompt((notification) => {
-      if (notification.isSkippedMoment() || notification.isDismissedMoment()) {
-        startManualOAuth();
-      }
+    google.accounts.id.prompt(function(notification) {
+      // If One Tap is suppressed, renderButton click will trigger callback directly
+      console.log('GSI prompt:', notification.getMomentType());
     });
   } else {
-    startManualOAuth();
+    // GSI not loaded yet - retry
+    setTimeout(startGoogleLogin, 500);
   }
 }
 
-function startManualOAuth() {
-  const scope = 'openid email profile';
-  const params = new URLSearchParams({
-    client_id: GOOGLE_CLIENT_ID,
-    redirect_uri: window.location.origin,
-    response_type: 'id_token',
-    scope,
-    nonce: Math.random().toString(36),
-  });
-  const w=500,h=600,left=screen.width/2-250,top=screen.height/2-300;
-  const popup = window.open(
-    'https://accounts.google.com/o/oauth2/v2/auth?' + params,
-    'glogin', 'width='+w+',height='+h+',left='+left+',top='+top+',scrollbars=yes'
-  );
-  // Poll for token in hash
-  const poll = setInterval(() => {
-    try {
-      const hash = popup?.location?.hash || '';
-      if (hash.includes('id_token=')) {
-        clearInterval(poll);
-        popup.close();
-        const params = new URLSearchParams(hash.slice(1));
-        const idToken = params.get('id_token');
-        if (idToken) {
-          onGoogleCredential({ credential: idToken });
-        }
-      }
-    } catch(e) {}
-    if (popup?.closed) {
-      clearInterval(poll);
-      if (!user) onDemoLogin();
-    }
-  }, 500);
-}
-
 function onDemoLogin() {
-  // Demo mode when server is not connected
-  user = { name:'Aarav Kumar', email:'aarav@gmail.com', id:'demo', avatar:null };
+  user = { name:'Demo User', email:'demo@example.com', id:'demo', avatar:null };
   accessToken = 'demo-token';
-  finishLogin();
-  toast('⚡ Demo mode — connect backend for full features','gold');
-}
-
-function onLoginSuccess(data) {
-  user = data.user;
-  accessToken = data.accessToken;
   localStorage.setItem('jp_user', JSON.stringify(user));
   localStorage.setItem('jp_token', accessToken);
   finishLogin();
-  toast('✅ Welcome to JobPilot, '+user.name.split(' ')[0]+'!','green');
+  toast('Demo mode active', 'gold');
 }
 
 function finishLogin() {
-  document.getElementById('lp').classList.add('out');
-  setTimeout(()=>document.getElementById('lp').style.display='none',500);
-
-  // Set UI
+  const lp = document.getElementById('lp');
+  if (lp) { lp.classList.add('out'); setTimeout(()=>{ lp.style.display='none'; }, 500); }
   const initials = user.name.split(' ').map(x=>x[0]).join('').toUpperCase();
   document.getElementById('sb-initials').textContent = initials;
   document.getElementById('p-initials').textContent = initials;
   document.getElementById('sb-uname').textContent = user.name;
   document.getElementById('dash-name').textContent = user.name.split(' ')[0];
-  document.getElementById('s-gmail').textContent = user.email;
-
-  // Greeting
+  const sg = document.getElementById('s-gmail');
+  if(sg) sg.textContent = user.email;
   const h = new Date().getHours();
   document.getElementById('greeting').textContent = h<12?'morning':h<17?'afternoon':'evening';
-
-  // Load data
-  setTimeout(()=>{
-    loadDashboard();
-    loadJobs();
-    loadEmails();
-    loadApplied();
-    checkApiStatus();
-  }, 500);
-
-  // Pre-fill profile
+  setTimeout(function(){ loadDashboard(); loadJobs(); loadEmails(); loadApplied(); checkApiStatus(); }, 600);
   document.getElementById('p-name').value = user.name;
   document.getElementById('p-email').value = user.email;
   document.getElementById('a-name').value = user.name;
@@ -986,32 +930,26 @@ function finishLogin() {
   document.getElementById('r-name').value = user.name;
 }
 
-// Check if already logged in
-window.onload = () => {
-  const saved = localStorage.getItem('jp_user');
-  const tok = localStorage.getItem('jp_token');
+window.onload = function() {
+  // Check existing session
+  var saved = localStorage.getItem('jp_user');
+  var tok = localStorage.getItem('jp_token');
   if (saved && tok) {
-    user = JSON.parse(saved);
-    accessToken = tok;
-    finishLogin();
-    return;
-  }
-
-  // Set greeting
-  const h = new Date().getHours();
-  const el = document.getElementById('greeting');
-  if(el) el.textContent = h<12?'morning':h<17?'afternoon':'evening';
-
-  // Init Google GSI
-  initGSI();
-  // Safety: if GSI doesn't load in 2s, keep fallback button visible
-  setTimeout(() => {
-    const wrap = document.getElementById('gsi-btn-wrap');
-    const fb = document.getElementById('login-btn');
-    if (wrap && !wrap.querySelector('iframe') && fb) {
-      fb.style.display = 'flex';
+    try {
+      user = JSON.parse(saved);
+      accessToken = tok;
+      finishLogin();
+      return;
+    } catch(e) {
+      localStorage.removeItem('jp_user');
+      localStorage.removeItem('jp_token');
     }
-  }, 2000);
+  }
+  var h = new Date().getHours();
+  var el = document.getElementById('greeting');
+  if(el) el.textContent = h<12?'morning':h<17?'afternoon':'evening';
+  // Init GSI
+  initGSI();
 };
 
 function initGSI() {
@@ -1019,70 +957,89 @@ function initGSI() {
     setTimeout(initGSI, 400);
     return;
   }
-  try {
-    google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: onGoogleCredential,
-      auto_select: false,
-      ux_mode: 'popup',
-      context: 'signin'
-    });
-    const wrap = document.getElementById('gsi-btn-wrap');
-    if (wrap) {
-      google.accounts.id.renderButton(wrap, {
-        type: 'standard',
-        theme: 'filled_black',
-        size: 'large',
-        text: 'continue_with',
-        shape: 'rectangular',
-        logo_alignment: 'left',
-        width: 320
-      });
-      // Hide fallback only if GSI button rendered successfully
-      setTimeout(() => {
-        if (wrap.querySelector('iframe')) {
-          const fb = document.getElementById('login-btn');
-          if(fb) fb.style.display = 'none';
-        }
-      }, 800);
+  // Initialize GSI — our custom button calls triggerGoogleLogin()
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: onGoogleCredential,
+    auto_select: false,
+    cancel_on_tap_outside: false,
+    ux_mode: 'popup'
+  });
+  // Hide the GSI wrap — we use our own styled button
+  var wrap = document.getElementById('gsi-btn-wrap');
+  if (wrap) wrap.style.display = 'none';
+  console.log('GSI initialized ✅');
+}
+
+function triggerGoogleLogin() {
+  var btn = document.getElementById('login-btn');
+  if (btn) { btn.textContent = 'Connecting...'; btn.disabled = true; }
+
+  if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+    // GSI not loaded yet
+    if (btn) { btn.innerHTML = getContinueWithGoogleHTML(); btn.disabled = false; }
+    alert('Google login not ready. Please refresh the page and try again.');
+    return;
+  }
+
+  google.accounts.id.prompt(function(notification) {
+    if (btn) { btn.innerHTML = getContinueWithGoogleHTML(); btn.disabled = false; }
+    var type = notification.getMomentType();
+    if (type === 'skipped' || type === 'dismissed') {
+      // One Tap suppressed — show account picker via renderButton click
+      showGoogleAccountPicker();
     }
-  } catch(e) {
-    console.log('GSI init error:', e);
-    // fallback button stays visible
+  });
+}
+
+function getContinueWithGoogleHTML() {
+  return '<svg width="20" height="20" viewBox="0 0 24 24" style="flex-shrink:0"><path fill=\"#4285F4\" d=\"M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z\"/><path fill=\"#34A853\" d=\"M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z\"/><path fill=\"#FBBC05\" d=\"M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z\"/><path fill=\"#EA4335\" d=\"M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z\"/></svg> Continue with Google';
+}
+
+function showGoogleAccountPicker() {
+  // Render hidden button and programmatically click it
+  var hiddenWrap = document.getElementById('gsi-btn-wrap');
+  if (hiddenWrap) {
+    hiddenWrap.style.display = 'block';
+    hiddenWrap.style.position = 'absolute';
+    hiddenWrap.style.opacity = '0';
+    hiddenWrap.style.pointerEvents = 'auto';
+    google.accounts.id.renderButton(hiddenWrap, {
+      type: 'standard', theme: 'filled_black', size: 'large', width: 320
+    });
+    setTimeout(function() {
+      var iframe = hiddenWrap.querySelector('iframe');
+      if (iframe) {
+        // Click the iframe's internal button area
+        var rect = iframe.getBoundingClientRect();
+        iframe.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
+      }
+    }, 300);
   }
 }
 
-// Show terms/privacy on login page without navigating away
 function showLoginModal(type) {
-  const el = document.getElementById('lp-modal-content');
-  const modal = document.getElementById('lp-modal');
+  var el = document.getElementById('lp-modal-content');
+  var modal = document.getElementById('lp-modal');
+  if(!el || !modal) return;
   if (type === 'terms') {
-    el.innerHTML = `<h2 style="font-family:Syne,sans-serif;font-size:1.1rem;margin-bottom:16px">📋 Terms of Service</h2>
-    <div style="font-size:.83rem;color:#8888aa;line-height:1.8">
-      <p><b style="color:#eeeef8">1. Acceptance</b><br>Using JobPilot means you accept these terms. You must be 18+ with a valid Google account.</p><br>
-      <p><b style="color:#eeeef8">2. Permitted Use</b><br>Personal job-seeking only. No spam or illegal use.</p><br>
-      <p><b style="color:#eeeef8">3. AI Content</b><br>AI-generated content are suggestions. Review before sending. JobPilot is not liable for application outcomes.</p><br>
-      <p><b style="color:#eeeef8">4. Termination</b><br>You can delete your account anytime from Settings.</p>
-    </div>`;
+    el.innerHTML = '<h2 style="font-family:Syne,sans-serif;font-size:1.1rem;margin-bottom:16px;color:#eeeef8">Terms of Service</h2><div style="font-size:.83rem;color:#8888aa;line-height:1.8"><p><b style=\"color:#eeeef8\">1. Acceptance</b><br>Using JobPilot means you accept these terms.</p><br><p><b style=\"color:#eeeef8\">2. Permitted Use</b><br>Personal job-seeking only. No spam.</p><br><p><b style=\"color:#eeeef8\">3. AI Content</b><br>Review AI-generated content before sending.</p></div>';
   } else {
-    el.innerHTML = `<h2 style="font-family:Syne,sans-serif;font-size:1.1rem;margin-bottom:16px">🔒 Privacy Policy</h2>
-    <div style="font-size:.83rem;color:#8888aa;line-height:1.8">
-      <p><b style="color:#eeeef8">1. Data We Collect</b><br>Name, email, resume, job preferences. Gmail read-only for job reply emails only.</p><br>
-      <p><b style="color:#eeeef8">2. How We Use Data</b><br>Solely to power JobPilot features. We never sell or share your data.</p><br>
-      <p><b style="color:#eeeef8">3. Security</b><br>All data encrypted in transit (TLS 1.3) and at rest (AES-256).</p><br>
-      <p><b style="color:#eeeef8">4. Your Rights</b><br>Export or delete all data anytime from Settings.</p>
-    </div>`;
+    el.innerHTML = '<h2 style="font-family:Syne,sans-serif;font-size:1.1rem;margin-bottom:16px;color:#eeeef8">Privacy Policy</h2><div style="font-size:.83rem;color:#8888aa;line-height:1.8"><p><b style=\"color:#eeeef8\">1. Data</b><br>Name, email, resume. Gmail read-only for job emails.</p><br><p><b style=\"color:#eeeef8\">2. Usage</b><br>Solely to power JobPilot. Never sold.</p><br><p><b style=\"color:#eeeef8\">3. Security</b><br>TLS 1.3 + AES-256 encryption.</p></div>';
   }
   modal.style.display = 'flex';
 }
 
 function doLogout() {
+  if (window.google && window.google.accounts && window.google.accounts.id) {
+    google.accounts.id.disableAutoSelect();
+  }
   localStorage.removeItem('jp_user');
   localStorage.removeItem('jp_token');
   user = null; accessToken = null;
-  document.getElementById('lp').style.display='flex';
-  document.getElementById('lp').classList.remove('out');
-  toast('👋 Logged out','blue');
+  var lp = document.getElementById('lp');
+  if(lp) { lp.style.display='flex'; lp.classList.remove('out'); }
+  toast('Logged out', 'blue');
 }
 
 // ══════════════════════════════════════════════════
