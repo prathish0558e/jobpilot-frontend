@@ -720,13 +720,16 @@ function obFinish() {
   </div>
 
   <div class="sb-footer">
-    <div class="sb-profile" onclick="nav('profile')">
+    <div class="sb-profile" onclick="nav('profile')" style="margin-bottom:8px">
       <div class="ava" id="sb-ava"><span id="sb-initials">?</span></div>
-      <div>
+      <div style="flex:1;min-width:0">
         <div class="sb-name" id="sb-uname">Loading...</div>
         <div class="sb-role"><span class="dot dg"></span> Auto Active</div>
       </div>
     </div>
+    <button onclick="doLogout()" style="width:100%;background:#ff6b6b12;border:1px solid #ff6b6b25;color:#ff6b6b;border-radius:8px;padding:8px;font-family:inherit;font-size:.8rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px" onmouseover="this.style.background='#ff6b6b22'" onmouseout="this.style.background='#ff6b6b12'">
+      🚪 Logout
+    </button>
   </div>
 </div>
 
@@ -1230,21 +1233,246 @@ function onGoogleCredential(response) {
   try {
     var parts = response.credential.split('.');
     var base64 = parts[1].replace(/-/g,'+').replace(/_/g,'/');
+    // Fix base64 padding
+    while (base64.length % 4) base64 += '=';
     var payload = JSON.parse(atob(base64));
-    user = { name: payload.name, email: payload.email, id: payload.sub, avatar: payload.picture };
-    accessToken = response.credential;
-    localStorage.setItem('jp_user', JSON.stringify(user));
+    user = {
+      name:   payload.name   || '',
+      email:  payload.email  || '',
+      id:     payload.sub    || '',
+      avatar: payload.picture|| ''
+    };
+    accessToken = response.credential; // ID token
+    localStorage.setItem('jp_user',  JSON.stringify(user));
     localStorage.setItem('jp_token', accessToken);
-    finishLogin();
-    toast('Welcome, ' + user.name.split(' ')[0] + '!', 'green');
+    window._jpUser = user;
+
+    // Send to backend to verify
     fetch(API + '/auth/google-gsi', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ idToken: response.credential })
     }).catch(function(){});
+
+    finishLogin();
+    toast('Welcome, ' + user.name.split(' ')[0] + '! 🎉', 'green');
+
+    // Request Gmail access token via OAuth2 for sending emails
+    requestGmailAccess();
   } catch(e) {
     console.error('GSI decode error:', e);
     onDemoLogin();
+  }
+}
+
+// Request Gmail read+send scope via popup
+function requestGmailAccess() {
+  // Only if not already granted
+  if (localStorage.getItem('jp_gmail_token')) {
+    window._gmailToken = localStorage.getItem('jp_gmail_token');
+    console.log('[JobPilot] Gmail token restored');
+    startAutoEmailEngine();
+    return;
+  }
+
+  // Use Google OAuth2 implicit flow for Gmail scope
+  var CLIENT_ID = GOOGLE_CLIENT_ID;
+  var SCOPES    = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+  var params    = new URLSearchParams({
+    client_id:    CLIENT_ID,
+    redirect_uri: window.location.origin,
+    response_type:'token',
+    scope:        SCOPES,
+    prompt:       'none', // silent — use existing session
+    login_hint:   user.email
+  });
+
+  // Try silent token first via hidden iframe
+  var iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = 'https://accounts.google.com/o/oauth2/v2/auth?' + params;
+  document.body.appendChild(iframe);
+
+  // Listen for token in iframe hash
+  var timeout = setTimeout(function() {
+    document.body.removeChild(iframe);
+    // Silent failed — ask user to grant
+    showGmailPermissionBanner();
+  }, 4000);
+
+  window.addEventListener('message', function handler(e) {
+    if (e.data && e.data.access_token) {
+      clearTimeout(timeout);
+      document.body.removeChild(iframe);
+      window.removeEventListener('message', handler);
+      window._gmailToken = e.data.access_token;
+      localStorage.setItem('jp_gmail_token', e.data.access_token);
+      console.log('[JobPilot] Gmail token acquired silently ✅');
+      startAutoEmailEngine();
+    }
+  });
+}
+
+function showGmailPermissionBanner() {
+  // Show a banner asking user to grant Gmail access for auto-email
+  var banner = document.createElement('div');
+  banner.id = 'gmail-banner';
+  banner.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1c1c28;border:1px solid #7c6fff40;border-radius:14px;padding:14px 20px;z-index:9000;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px #00000080;max-width:420px;width:90%';
+  banner.innerHTML = '<div style="font-size:1.5rem">✉️</div>'
+    + '<div style="flex:1">'
+    + '<div style="font-weight:600;font-size:.88rem;color:#eeeef8">Gmail Access தேவை</div>'
+    + '<div style="font-size:.76rem;color:#8888aa;margin-top:2px">Auto HR emails அனுப்ப Gmail permission குடுங்க</div>'
+    + '</div>'
+    + '<button onclick="grantGmailAccess()" style="background:linear-gradient(135deg,#7c6fff,#b794f4);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:.8rem;cursor:pointer;white-space:nowrap">Allow ✅</button>'
+    + '<button onclick="document.getElementById('gmail-banner').remove()" style="background:none;border:none;color:#44445a;cursor:pointer;font-size:18px;padding:0 0 0 4px">✕</button>';
+  document.body.appendChild(banner);
+  // Auto-remove after 10s
+  setTimeout(function() { if(banner.parentNode) banner.remove(); }, 10000);
+}
+
+function grantGmailAccess() {
+  var banner = document.getElementById('gmail-banner');
+  if (banner) banner.remove();
+
+  var SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+  var params = new URLSearchParams({
+    client_id:    GOOGLE_CLIENT_ID,
+    redirect_uri: window.location.origin,
+    response_type:'token',
+    scope:        SCOPES,
+    prompt:       'consent',
+    login_hint:   user ? user.email : ''
+  });
+  var w = 500, h = 600;
+  var left = Math.round(screen.width/2 - w/2);
+  var top  = Math.round(screen.height/2 - h/2);
+  var popup = window.open(
+    'https://accounts.google.com/o/oauth2/v2/auth?' + params,
+    'gmail_auth',
+    'width='+w+',height='+h+',left='+left+',top='+top
+  );
+
+  var poll = setInterval(function() {
+    try {
+      var hash = popup.location.hash || '';
+      if (hash.includes('access_token=')) {
+        clearInterval(poll);
+        popup.close();
+        var p = new URLSearchParams(hash.slice(1));
+        var tok = p.get('access_token');
+        if (tok) {
+          window._gmailToken = tok;
+          localStorage.setItem('jp_gmail_token', tok);
+          toast('✅ Gmail connected! Auto-email ready.', 'green');
+          startAutoEmailEngine();
+        }
+      }
+    } catch(e) {}
+    if (!popup || popup.closed) { clearInterval(poll); }
+  }, 500);
+}
+
+// Auto Email Engine — sends job emails automatically
+var _autoEmailRunning = false;
+var _autoEmailInterval = null;
+
+function startAutoEmailEngine() {
+  if (_autoEmailRunning) return;
+  _autoEmailRunning = true;
+  console.log('[AutoEmail] Engine started ✅');
+  toast('⚡ Auto-email engine started!', 'green');
+
+  // Run immediately once, then every 15 minutes
+  runAutoEmailCycle();
+  _autoEmailInterval = setInterval(runAutoEmailCycle, 15 * 60 * 1000);
+}
+
+async function runAutoEmailCycle() {
+  var gmailTok = window._gmailToken || localStorage.getItem('jp_gmail_token');
+  if (!gmailTok) return;
+
+  var profile = JSON.parse(localStorage.getItem('jp_profile') || '{}');
+  if (!profile.role || !profile.name) return;
+
+  console.log('[AutoEmail] Running cycle for:', profile.role);
+
+  try {
+    // 1. Fetch latest jobs
+    var jobRes = await fetch(API + '/jobs/search?q=' + encodeURIComponent(profile.role)
+      + '&location=' + encodeURIComponent(profile.location || 'India')
+      + '&results_per_page=5&sort_by=date');
+    var jobData = await jobRes.json();
+    var jobs = (jobData.jobs || []).slice(0, 3); // max 3 per cycle
+
+    for (var i = 0; i < jobs.length; i++) {
+      var job = jobs[i];
+
+      // Check not already applied
+      var appliedKey = 'applied_' + job.id;
+      if (localStorage.getItem(appliedKey)) continue;
+
+      // 2. Generate AI email
+      var emailRes = await fetch(API + '/ai/email', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          name:        profile.name,
+          role:        profile.role,
+          company:     job.company,
+          jobTitle:    job.title,
+          skills:      profile.skills,
+          experience:  profile.exp,
+          tone:        'professional'
+        })
+      });
+      var emailData = await emailRes.json();
+      if (emailData.error || !emailData.subject) continue;
+
+      // 3. Guess HR email (common patterns)
+      var domain = (job.company || '').toLowerCase()
+        .replace(/[^a-z0-9]/g,'').replace(/pvtltd|ltd|inc|corp|technologies|solutions/g,'');
+      var hrEmail = 'hr@' + domain + '.com';
+
+      // 4. Send via Gmail API
+      var sendRes = await fetch(API + '/gmail/send', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          accessToken: gmailTok,
+          to:          hrEmail,
+          subject:     emailData.subject,
+          body:        emailData.body
+        })
+      });
+      var sendData = await sendRes.json();
+
+      if (sendData.success) {
+        // Mark as applied
+        localStorage.setItem(appliedKey, new Date().toISOString());
+
+        // Add to applied list
+        appliedJobs.unshift({
+          title:     job.title,
+          company:   job.company,
+          location:  job.location,
+          salary:    job.salary,
+          status:    'Applied',
+          appliedAt: new Date().toISOString(),
+          autoSent:  true
+        });
+
+        var badge = document.getElementById('sb-applied');
+        if (badge) badge.textContent = appliedJobs.length;
+
+        console.log('[AutoEmail] ✅ Email sent to', hrEmail, 'for', job.title, '@', job.company);
+        toast('📧 Auto-applied: ' + job.title + ' @ ' + job.company, 'green');
+      }
+
+      // Wait 3s between emails (rate limit)
+      await new Promise(function(r) { setTimeout(r, 3000); });
+    }
+  } catch(e) {
+    console.error('[AutoEmail] Error:', e);
   }
 }
 
@@ -1382,21 +1610,46 @@ function initGSI() {
 }
 
 function doLogout() {
+  // Stop auto email engine
+  if (window._autoEmailInterval) {
+    clearInterval(window._autoEmailInterval);
+    window._autoEmailInterval = null;
+  }
+  window._autoEmailRunning = false;
+  window._gmailToken = null;
+
+  // Sign out Google
   if (window.google && window.google.accounts && window.google.accounts.id) {
     google.accounts.id.disableAutoSelect();
+    if (user && user.email) {
+      google.accounts.id.revoke(user.email, function(){});
+    }
   }
+
+  // Clear all storage
   localStorage.removeItem('jp_user');
   localStorage.removeItem('jp_token');
   localStorage.removeItem('jp_profile');
-  user = null; accessToken = null; appliedJobs = [];
+  localStorage.removeItem('jp_onboarded');
+  localStorage.removeItem('jp_gmail_token');
+
+  user = null;
+  accessToken = null;
+  appliedJobs = [];
+  window._gsiDone = false;
+
+  // Show login page
   var lp = document.getElementById('lp');
   if (lp) {
-    lp.style.opacity = '1';
-    lp.style.transform = 'scale(1)';
-    lp.style.pointerEvents = 'all';
-    lp.style.display = 'flex';
+    lp.style.cssText = 'position:fixed;inset:0;background:#08080f;display:flex;align-items:center;justify-content:center;z-index:9999;opacity:1;transform:scale(1);pointer-events:all';
   }
-  toast('Logged out', 'blue');
+
+  // Hide onboarding if showing
+  var ob = document.getElementById('ob');
+  if (ob) ob.style.display = 'none';
+
+  toast('👋 Logged out successfully', 'blue');
+  console.log('[JobPilot] Logged out');
 }
 
 function showLoginModal(type) {
@@ -1840,7 +2093,10 @@ function handleResumeUpload(input, type) {
 // ══════════════════════════════════════════════════
 
 async function loadEmails() {
-  if (!accessToken || accessToken === 'demo-token') { renderDemoEmails(); return; }
+  // Use Gmail token if available, else demo
+  var gmailTok = window._gmailToken || localStorage.getItem('jp_gmail_token');
+  if (!gmailTok) { renderDemoEmails(); return; }
+  accessToken = gmailTok; // Use Gmail token for email calls
   var inboxList = document.getElementById('inbox-list');
   if (inboxList) inboxList.innerHTML = '<div class="sk" style="height:60px;border-radius:10px;margin-bottom:7px"></div><div class="sk" style="height:60px;border-radius:10px"></div>';
   var data = await apiCall('/gmail/job-emails', { method: 'POST', body: JSON.stringify({ accessToken: accessToken }) });
