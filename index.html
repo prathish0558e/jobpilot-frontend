@@ -237,6 +237,9 @@ body::before{content:'';position:fixed;inset:0;
 .sk{background:linear-gradient(90deg,var(--bg3) 25%,var(--card2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:sk 1.5s infinite;border-radius:6px}
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+.ob-step{width:28px;height:28px;border-radius:50%;background:#1c1c28;border:2px solid #ffffff15;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#44445a;transition:all .3s}
+.ob-step-active{background:#7c6fff;border-color:#7c6fff;color:#fff}
+.ob-step-done{background:#00d4aa18;border-color:#00d4aa;color:#00d4aa}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
@@ -324,6 +327,161 @@ function setMobActive(btn) {
   document.querySelectorAll('.mob-btn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
 }
+
+// ── ONBOARDING FUNCTIONS ──────────────────────────
+function showOnboarding() {
+  var ob = document.getElementById('ob');
+  if (ob) ob.style.display = 'block';
+  // Pre-fill email & name from Google
+  var emailEl = document.getElementById('ob-email');
+  var nameEl  = document.getElementById('ob-name');
+  if (window._jpUser) {
+    if (emailEl) emailEl.value = window._jpUser.email || '';
+    if (nameEl && !nameEl.value) nameEl.value = window._jpUser.name || '';
+  }
+}
+
+function obNext(step) {
+  if (step === 1) {
+    var name  = document.getElementById('ob-name').value.trim();
+    var phone = document.getElementById('ob-phone').value.trim();
+    var city  = document.getElementById('ob-city').value.trim();
+    if (!name)  { alert('Name குடுங்க'); return; }
+    if (!phone) { alert('Phone number குடுங்க'); return; }
+    if (!city)  { alert('City குடுங்க'); return; }
+    document.getElementById('ob-s1').style.display = 'none';
+    document.getElementById('ob-s2').style.display = 'block';
+    obSetStep(2);
+  } else if (step === 2) {
+    var role   = document.getElementById('ob-role').value.trim();
+    var skills = document.getElementById('ob-skills').value.trim();
+    var exp    = document.getElementById('ob-exp').value;
+    if (!role)   { alert('Job role குடுங்க'); return; }
+    if (!skills) { alert('Skills குடுங்க'); return; }
+    if (!exp)    { alert('Experience level select பண்ணுங்க'); return; }
+    document.getElementById('ob-s2').style.display = 'none';
+    document.getElementById('ob-s3').style.display = 'block';
+    obSetStep(3);
+  }
+}
+
+function obBack(step) {
+  if (step === 2) {
+    document.getElementById('ob-s2').style.display = 'none';
+    document.getElementById('ob-s1').style.display = 'block';
+    obSetStep(1);
+  } else if (step === 3) {
+    document.getElementById('ob-s3').style.display = 'none';
+    document.getElementById('ob-s2').style.display = 'block';
+    obSetStep(2);
+  }
+}
+
+function obSetStep(n) {
+  [1,2,3].forEach(function(i) {
+    var dot = document.getElementById('ob-dot-'+i);
+    if (!dot) return;
+    dot.className = 'ob-step' + (i < n ? ' ob-step-done' : i === n ? ' ob-step-active' : '');
+    dot.textContent = i < n ? '✓' : i;
+  });
+}
+
+function handleObResume(input) {
+  if (!input.files || !input.files[0]) return;
+  var el = document.getElementById('ob-resume-name');
+  if (el) el.textContent = '✅ ' + input.files[0].name;
+  window._obResumeFile = input.files[0];
+}
+
+function obFinish() {
+  var btn = document.getElementById('ob-finish-btn');
+  if (btn) { btn.textContent = '⏳ Setting up...'; btn.disabled = true; }
+
+  // Collect all data
+  var profile = {
+    name:     document.getElementById('ob-name').value.trim(),
+    phone:    document.getElementById('ob-phone').value.trim(),
+    email:    document.getElementById('ob-email').value.trim(),
+    location: document.getElementById('ob-city').value.trim(),
+    role:     document.getElementById('ob-role').value.trim(),
+    skills:   document.getElementById('ob-skills').value.trim(),
+    exp:      document.getElementById('ob-exp').value,
+    edu:      document.getElementById('ob-edu').value.trim(),
+    salary:   document.getElementById('ob-sal').value.trim(),
+    mode:     document.getElementById('ob-mode').value,
+    jtype:    document.getElementById('ob-jtype').value,
+    radius:   document.getElementById('ob-radius').value,
+    linkedin: document.getElementById('ob-linkedin').value.trim(),
+    github:   document.getElementById('ob-github').value.trim()
+  };
+
+  // Save to localStorage
+  localStorage.setItem('jp_profile', JSON.stringify(profile));
+  localStorage.setItem('jp_onboarded', '1');
+
+  // Pre-fill all profile fields in app
+  function setV(id, val) { var e = document.getElementById(id); if(e) e.value = val || ''; }
+  setV('p-name', profile.name);
+  setV('p-email', profile.email);
+  setV('p-phone', profile.phone);
+  setV('p-loc', profile.location);
+  setV('p-role', profile.role);
+  setV('p-skills', profile.skills);
+  setV('p-sal', profile.salary);
+  setV('p-li', profile.linkedin);
+  setV('p-gh', profile.github);
+  setV('a-name', profile.name);
+  setV('a-role', profile.role);
+  setV('a-skills', profile.skills);
+  setV('a-loc', profile.location);
+  setV('a-email', profile.email);
+  setV('r-name', profile.name);
+  setV('r-role', profile.role);
+  setV('r-skills', profile.skills);
+  setV('r-loc', profile.location);
+  setV('r-edu', profile.edu);
+  setV('sq', profile.role);
+  setV('sloc', profile.location);
+  setV('pt-q', profile.role);
+  setV('pt-loc', profile.location);
+
+  // Update sidebar name
+  var su = document.getElementById('sb-uname');
+  if (su) su.textContent = profile.name;
+  var si = document.getElementById('sb-initials');
+  if (si) si.textContent = profile.name.split(' ').map(function(x){return x[0]||'';}).join('').toUpperCase() || 'U';
+  var pi = document.getElementById('p-initials');
+  if (pi) pi.textContent = profile.name.split(' ').map(function(x){return x[0]||'';}).join('').toUpperCase() || 'U';
+
+  // Hide onboarding
+  var ob = document.getElementById('ob');
+  if (ob) {
+    ob.style.transition = 'opacity .4s';
+    ob.style.opacity = '0';
+    setTimeout(function() { ob.style.display = 'none'; ob.style.opacity = '1'; }, 420);
+  }
+
+  if (btn) { btn.textContent = '🚀 Start Job Hunting!'; btn.disabled = false; }
+
+  // Show dashboard with jobs loading
+  if (typeof nav === 'function') nav('dash');
+  if (typeof loadDashboard === 'function') loadDashboard();
+
+  // Auto-search jobs based on profile
+  setTimeout(function() {
+    if (typeof loadJobs === 'function') loadJobs();
+    if (typeof loadEmails === 'function') loadEmails();
+    if (typeof loadApplied === 'function') loadApplied();
+    if (typeof checkApiStatus === 'function') checkApiStatus();
+  }, 500);
+
+  // Show welcome toast
+  setTimeout(function() {
+    if (typeof toast === 'function') {
+      toast('🎉 Welcome ' + profile.name.split(' ')[0] + '! Searching jobs for you...', 'green');
+    }
+  }, 800);
+}
 </script>
 
 <!-- ── LOGIN PAGE ── -->
@@ -375,6 +533,160 @@ function setMobActive(btn) {
     <div id="lp-modal-content"></div>
   </div>
 </div>
+<!-- ── ONBOARDING ── -->
+<div id="ob" style="display:none;position:fixed;inset:0;background:#08080f;z-index:900;overflow-y:auto">
+  <div style="max-width:540px;margin:0 auto;padding:40px 24px 60px">
+    
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;letter-spacing:-.04em">
+        Job<span style="color:#7c6fff">Pilot</span> 🚀
+      </div>
+      <div style="color:#8888aa;font-size:.9rem;margin-top:6px">உங்க profile set பண்ணுங்க — AI உங்களுக்கு jobs தேடும்</div>
+      <!-- Steps -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px">
+        <div class="ob-step ob-step-active" id="ob-dot-1">1</div>
+        <div style="height:2px;width:40px;background:#ffffff15" id="ob-line-1"></div>
+        <div class="ob-step" id="ob-dot-2">2</div>
+        <div style="height:2px;width:40px;background:#ffffff15" id="ob-line-2"></div>
+        <div class="ob-step" id="ob-dot-3">3</div>
+      </div>
+    </div>
+
+    <!-- STEP 1: Personal Info -->
+    <div id="ob-s1">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:4px">👤 Personal Details</div>
+      <div style="font-size:.8rem;color:#8888aa;margin-bottom:24px">உங்களைப் பத்தி சொல்லுங்க</div>
+
+      <div class="fg">
+        <label class="fl">Full Name *</label>
+        <input class="fi" id="ob-name" placeholder="உங்க full name" required>
+      </div>
+      <div class="fg">
+        <label class="fl">Phone Number *</label>
+        <input class="fi" id="ob-phone" type="tel" placeholder="+91 98765 43210" required>
+      </div>
+      <div class="fg">
+        <label class="fl">Email (Gmail) *</label>
+        <input class="fi" id="ob-email" type="email" placeholder="you@gmail.com" readonly style="opacity:.7">
+      </div>
+      <div class="fg">
+        <label class="fl">City / Location *</label>
+        <input class="fi" id="ob-city" placeholder="e.g. Chennai, Bangalore, Madurai">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-p" style="flex:1;justify-content:center" onclick="obNext(1)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Job Preferences -->
+    <div id="ob-s2" style="display:none">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:4px">💼 Job Preferences</div>
+      <div style="font-size:.8rem;color:#8888aa;margin-bottom:24px">என்ன job தேடுறீங்க?</div>
+
+      <div class="fg">
+        <label class="fl">Target Job Role *</label>
+        <input class="fi" id="ob-role" placeholder="e.g. React Developer, Data Analyst, Designer">
+      </div>
+      <div class="fg">
+        <label class="fl">Your Skills *</label>
+        <input class="fi" id="ob-skills" placeholder="e.g. React, Python, Figma, Excel...">
+        <div style="font-size:.72rem;color:#44445a;margin-top:4px">Comma separated — எவ்வளவு போட்டாலும் OK</div>
+      </div>
+      <div class="fg">
+        <label class="fl">Experience Level *</label>
+        <select class="fs" id="ob-exp">
+          <option value="">Select...</option>
+          <option value="Fresher">Fresher (0-1 yr)</option>
+          <option value="Junior">Junior (1-3 yrs)</option>
+          <option value="Mid">Mid-level (3-5 yrs)</option>
+          <option value="Senior">Senior (5+ yrs)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Education</label>
+        <input class="fi" id="ob-edu" placeholder="e.g. B.Tech CSE, Anna University, 2023">
+      </div>
+      <div class="fg">
+        <label class="fl">Expected Salary (LPA)</label>
+        <input class="fi" id="ob-sal" placeholder="e.g. 4-8 LPA">
+      </div>
+      <div class="fg">
+        <label class="fl">Work Mode Preference</label>
+        <select class="fs" id="ob-mode">
+          <option value="Any">Any (Open to all)</option>
+          <option value="Remote">Remote only</option>
+          <option value="On-site">On-site only</option>
+          <option value="Hybrid">Hybrid</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-g" style="flex:0 0 100px;justify-content:center" onclick="obBack(2)">← Back</button>
+        <button class="btn btn-p" style="flex:1;justify-content:center" onclick="obNext(2)">Next →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Job Type + LinkedIn -->
+    <div id="ob-s3" style="display:none">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:4px">⚡ Automation Setup</div>
+      <div style="font-size:.8rem;color:#8888aa;margin-bottom:24px">JobPilot என்ன தேடணும்?</div>
+
+      <div class="fg">
+        <label class="fl">Job Type</label>
+        <select class="fs" id="ob-jtype">
+          <option value="both">Full-Time + Part-Time</option>
+          <option value="fulltime">Full-Time only</option>
+          <option value="parttime">Part-Time only</option>
+          <option value="remote">Remote only</option>
+          <option value="internship">Internship</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Search Radius (km from your city)</label>
+        <select class="fs" id="ob-radius">
+          <option value="10">10 km</option>
+          <option value="25" selected>25 km</option>
+          <option value="50">50 km</option>
+          <option value="100">100 km</option>
+          <option value="0">Anywhere in India</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">LinkedIn Profile (optional)</label>
+        <input class="fi" id="ob-linkedin" placeholder="linkedin.com/in/yourname">
+      </div>
+      <div class="fg">
+        <label class="fl">GitHub Profile (optional)</label>
+        <input class="fi" id="ob-github" placeholder="github.com/yourname">
+      </div>
+      
+      <!-- Resume Upload -->
+      <div class="fg">
+        <label class="fl">Upload Resume (optional)</label>
+        <div class="uz" style="padding:20px">
+          <input type="file" accept=".pdf,.docx" onchange="handleObResume(this)">
+          <div style="font-size:1.4rem;margin-bottom:4px">📄</div>
+          <div style="font-weight:500;font-size:.85rem" id="ob-resume-name">Drop resume or click to upload</div>
+          <div style="font-size:.72rem;color:#44445a;margin-top:2px">PDF or DOCX — used for auto-apply emails</div>
+        </div>
+      </div>
+
+      <div style="background:#7c6fff12;border:1px solid #7c6fff25;border-radius:12px;padding:14px;margin-bottom:20px;font-size:.82rem;color:#8888aa;line-height:1.6">
+        <div style="font-weight:600;color:#b794f4;margin-bottom:4px">🤖 AI என்ன பண்ணும்:</div>
+        உங்க profile வாங்கிட்டு JobPilot 24×7 உங்களுக்கு matching jobs தேடும், AI resume ready பண்ணும், HR-க்கு professional mail அனுப்பும்.
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-g" style="flex:0 0 100px;justify-content:center" onclick="obBack(3)">← Back</button>
+        <button class="btn btn-p" style="flex:1;justify-content:center;font-size:1rem;padding:14px" onclick="obFinish()" id="ob-finish-btn">
+          🚀 Start Job Hunting!
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- ── SIDEBAR ── -->
 <div id="sidebar">
   <div class="logo">
@@ -1007,17 +1319,27 @@ function finishLogin() {
     } catch(e){}
   }
 
-  // Navigate to dashboard
-  nav('dash');
-
-  // Load data after short delay
-  setTimeout(function() {
-    loadDashboard();
-    loadJobs();
-    loadEmails();
-    loadApplied();
-    checkApiStatus();
-  }, 600);
+  // Check if first-time user → show onboarding
+  var onboarded = localStorage.getItem('jp_onboarded');
+  if (!onboarded) {
+    // New user — show onboarding form
+    window._jpUser = user;
+    setTimeout(function() {
+      if (typeof showOnboarding === 'function') {
+        showOnboarding();
+      }
+    }, 500);
+  } else {
+    // Returning user — go straight to dashboard
+    nav('dash');
+    setTimeout(function() {
+      loadDashboard();
+      loadJobs();
+      loadEmails();
+      loadApplied();
+      checkApiStatus();
+    }, 600);
+  }
 }
 
 window.onload = function() {
