@@ -21,7 +21,16 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
 <!-- Google Identity Services — no redirect URI needed -->
-<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+/* ── JobPilot Config — must be first ── */
+var API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : 'https://jobpilot-backend-production.up.railway.app';
+var GOOGLE_CLIENT_ID = '382905055590-8em6btoluiikg3amjqa6fqk2ij5m1e21.apps.googleusercontent.com';
+var SUPABASE_URL  = 'https://fsciwivkplhcjsrqjnmk.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzY2l3aXZrcGxoY2pzcnFqbm1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1Njg0MjIsImV4cCI6MjA4OTE0NDQyMn0.KjzLuqxp2ocv0P0QSp6zjG2kQ087DgUkyQB_uksalH8';
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --bg:#08080f; --bg2:#0f0f18; --bg3:#16161f;
@@ -273,13 +282,7 @@ body::before{content:'';position:fixed;inset:0;
 </head>
 <body>
 
-<!-- ── CONFIG (set these before deploy) ── -->
-<script>
-const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://jobpilot-backend-production.up.railway.app';
-const GOOGLE_CLIENT_ID = '382905055590-8em6btoluiikg3amjqa6fqk2ij5m1e21.apps.googleusercontent.com';
-const SUPABASE_URL = 'https://fsciwivkplhcjsrqjnmk.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzY2l3aXZrcGxoY2pzcnFqbm1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1Njg0MjIsImV4cCI6MjA4OTE0NDQyMn0.KjzLuqxp2ocv0P0QSp6zjG2kQ087DgUkyQB_uksalH8';
-</script>
+
 
 <script>
 // Core functions — initialized before GSI loads
@@ -1324,7 +1327,7 @@ function showGmailPermissionBanner() {
     + '<div style="font-size:.76rem;color:#8888aa;margin-top:2px">Auto HR emails அனுப்ப Gmail permission குடுங்க</div>'
     + '</div>'
     + '<button onclick="grantGmailAccess()" style="background:linear-gradient(135deg,#7c6fff,#b794f4);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:.8rem;cursor:pointer;white-space:nowrap">Allow ✅</button>'
-    + '<button onclick="document.getElementById('gmail-banner').remove()" style="background:none;border:none;color:#44445a;cursor:pointer;font-size:18px;padding:0 0 0 4px">✕</button>';
+    + '<button onclick="document.getElementById(\'gmail-banner\').remove()" style="background:none;border:none;color:#44445a;cursor:pointer;font-size:18px;padding:0 0 0 4px">✕</button>';
   document.body.appendChild(banner);
   // Auto-remove after 10s
   setTimeout(function() { if(banner.parentNode) banner.remove(); }, 10000);
@@ -1596,17 +1599,28 @@ function initGSI() {
     return;
   }
   if (window._gsiDone) return;
+
+  // Safety check — CLIENT_ID must be defined
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'undefined') {
+    console.error('[JobPilot] GOOGLE_CLIENT_ID is missing!');
+    return;
+  }
+
   window._gsiDone = true;
+  console.log('[JobPilot] Initializing GSI with client:', GOOGLE_CLIENT_ID.substring(0,20) + '...');
+
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     callback: onGoogleCredential,
     auto_select: false,
     cancel_on_tap_outside: false,
-    ux_mode: 'popup'
+    ux_mode: 'popup',
+    itp_support: true
   });
+
   var wrap = document.getElementById('gsi-btn-wrap');
   if (wrap) wrap.style.display = 'none';
-  console.log('[JobPilot] GSI ready. Client:', GOOGLE_CLIENT_ID ? 'OK' : 'MISSING');
+  console.log('[JobPilot] GSI ready ✅');
 }
 
 function doLogout() {
