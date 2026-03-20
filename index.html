@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JobPilot">
+<meta name="theme-color" content="#08080f">
+<meta name="description" content="JobPilot — AI-powered job automation. Auto-apply to jobs 24x7, AI resume builder, smart email to HRs.">
+<meta name="keywords" content="job automation, AI resume, job search India, apply jobs automatically">
+<meta property="og:title" content="JobPilot – AI Job Automation">
+<meta property="og:description" content="Auto-apply to 50+ job portals 24x7 with Gemini AI">
+<meta property="og:image" content="https://jobpilot.prathi.tech/icons/og-image.png">
+<meta property="og:url" content="https://jobpilot.prathi.tech">
+<meta name="twitter:card" content="summary_large_image">
+<title>JobPilot – AI Job Automation | prathi.tech</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<!-- Google Identity Services — no redirect URI needed -->
+<script src="https://accounts.google.com/gsi/client" async></script>
+<style>
+:root {
+  --bg:#08080f; --bg2:#0f0f18; --bg3:#16161f;
+  --border:#ffffff0f; --border2:#ffffff1a;
+  --accent:#7c6fff; --accent2:#ff6b6b; --accent3:#00d4aa;
+  --gold:#f5c842;
+  --text:#eeeef8; --text2:#8888aa; --text3:#44445a;
+  --card:#111119; --card2:#1a1a24;
+  --radius:18px; --radius2:12px; --radius3:8px;
+  --api:http://localhost:8000;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4,h5{font-family:'Syne',sans-serif}
+
+/* MESH BG */
+body::after{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 80% 10%,#7c6fff11 0%,transparent 60%),
+             radial-gradient(ellipse 50% 40% at 10% 90%,#ff6b6b0d 0%,transparent 60%);
+  pointer-events:none;z-index:0}
+
+/* GRAIN */
+body::before{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity:.02;pointer-events:none;z-index:9999}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:232px;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;padding:20px 0;z-index:100}
+.logo{padding:0 18px 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.logo-mark{width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,#7c6fff,#b794f4);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.logo-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:-.03em}
+.logo-name b{color:var(--accent)}
+.logo-badge{font-size:.6rem;background:#00d4aa20;color:#00d4aa;border:1px solid #00d4aa30;border-radius:20px;padding:1px 6px;margin-left:4px}
+
+.nav-sec{padding:0 10px;margin-bottom:4px}
+.nav-lbl{font-size:.6rem;font-weight:700;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;padding:4px 8px 6px}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--radius3);cursor:pointer;transition:all .15s;color:var(--text2);font-size:.84rem;font-weight:500;border:1px solid transparent;margin-bottom:1px;position:relative}
+.ni:hover{background:var(--bg3);color:var(--text)}
+.ni.active{background:linear-gradient(135deg,#7c6fff15,#b794f410);color:var(--accent);border-color:#7c6fff20}
+.ni .ico{font-size:15px;width:18px;text-align:center;flex-shrink:0}
+.ni .badge{margin-left:auto;background:var(--accent2);color:#fff;border-radius:20px;font-size:.6rem;font-weight:700;padding:1px 5px}
+.ni .badge.green{background:var(--accent3)}
+
+.sb-footer{margin-top:auto;padding:14px 16px 0;border-top:1px solid var(--border)}
+.sb-profile{display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--radius3);cursor:pointer;transition:background .15s}
+.sb-profile:hover{background:var(--bg3)}
+.ava{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.75rem;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#7c6fff,#ff6b6b)}
+.ava img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.sb-name{font-size:.82rem;font-weight:600}
+.sb-role{font-size:.68rem;color:var(--text3);display:flex;align-items:center;gap:4px}
+
+/* ── MAIN ── */
+#main{margin-left:232px;min-height:100vh;padding:28px 32px;position:relative;z-index:1}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px}
+.page-title{font-size:1.45rem;font-weight:800;letter-spacing:-.04em;line-height:1.1}
+.page-sub{font-size:.82rem;color:var(--text2);margin-top:3px}
+.topbar-r{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius2);font-family:'DM Sans',sans-serif;font-weight:500;font-size:.84rem;cursor:pointer;border:1px solid transparent;transition:all .18s;text-decoration:none;white-space:nowrap}
+.btn-p{background:linear-gradient(135deg,#7c6fff,#b794f4);color:#fff}
+.btn-p:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 8px 28px #7c6fff40}
+.btn-g{background:transparent;color:var(--text2);border-color:var(--border2)}
+.btn-g:hover{background:var(--bg3);color:var(--text)}
+.btn-s{background:#00d4aa18;color:#00d4aa;border-color:#00d4aa30}
+.btn-s:hover{background:#00d4aa28}
+.btn-d{background:#ff6b6b18;color:#ff6b6b;border-color:#ff6b6b30}
+.btn-d:hover{background:#ff6b6b28}
+.btn-sm{padding:6px 12px;font-size:.78rem}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+
+/* PAGES */
+.page{display:none;animation:fu .35s ease}
+.page.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+
+/* STAT */
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;background:var(--accent);opacity:.07}
+.sl{font-size:.7rem;color:var(--text3);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.sv{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;margin:6px 0 3px;line-height:1}
+.sd{font-size:.72rem}
+.up{color:var(--accent3)} .dn{color:var(--accent2)}
+
+/* FORMS */
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:.76rem;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:.02em}
+.fi,.fs,.ft{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius3);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.84rem;padding:9px 13px;outline:none;transition:border-color .15s,box-shadow .15s}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--accent);box-shadow:0 0 0 3px #7c6fff18}
+.ft{resize:vertical;min-height:80px}
+.fs{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235555aa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:32px}
+
+/* TOGGLE */
+.tw{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg3);border-radius:var(--radius3);border:1px solid var(--border);margin-bottom:8px}
+.tw h4{font-size:.84rem;font-weight:500}
+.tw p{font-size:.72rem;color:var(--text3);margin-top:1px}
+.tg{width:38px;height:21px;border-radius:11px;background:var(--bg);border:1px solid var(--border2);cursor:pointer;position:relative;transition:background .18s;flex-shrink:0}
+.tg.on{background:var(--accent);border-color:var(--accent)}
+.tg::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .18s;box-shadow:0 1px 4px #0005}
+.tg.on::after{transform:translateX(17px)}
+
+/* CHIPS */
+.chip{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:.72rem;font-weight:500;background:var(--bg3);border:1px solid var(--border2);color:var(--text2)}
+.chip-a{background:#7c6fff18;border-color:#7c6fff35;color:#b794f4}
+.chip-g{background:#00d4aa18;border-color:#00d4aa35;color:#00d4aa}
+.chip-r{background:#ff6b6b18;border-color:#ff6b6b35;color:#ff6b6b}
+.chip-y{background:#f5c84218;border-color:#f5c84235;color:#f5c842}
+
+/* JOB CARD */
+.jc{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:all .18s;cursor:pointer}
+.jc:hover{border-color:var(--border2);background:var(--card2);transform:translateY(-2px);box-shadow:0 8px 32px #00000050}
+.jc-logo{width:38px;height:38px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.jc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;line-height:1.2}
+.jc-co{font-size:.77rem;color:var(--text2);margin-top:2px}
+.jc-acts{display:flex;gap:7px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* MAIL */
+.mi{display:flex;align-items:flex-start;gap:11px;padding:13px;border-radius:var(--radius2);border:1px solid var(--border);background:var(--card);margin-bottom:7px;transition:all .15s;cursor:pointer}
+.mi:hover{border-color:var(--border2);background:var(--card2)}
+.mi.unread{border-color:#7c6fff25;background:#7c6fff08}
+.mi-ava{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;flex-shrink:0}
+.mi-from{font-weight:600;font-size:.84rem}
+.mi-sub{font-size:.77rem;color:var(--text2);margin-top:2px}
+.mi-pre{font-size:.72rem;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+.mi-time{font-size:.68rem;color:var(--text3);margin-left:auto;flex-shrink:0}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--bg3);border-radius:var(--radius3);padding:3px;margin-bottom:20px;width:fit-content}
+.tab{padding:7px 16px;border-radius:6px;font-size:.82rem;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s;border:none;background:none}
+.tab.active{background:var(--card2);color:var(--text);box-shadow:0 2px 8px #00000050}
+
+/* SECTION HEADER */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.st{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem}
+.ss{font-size:.75rem;color:var(--text3);margin-top:1px}
+
+/* DIVIDER */
+.div{height:1px;background:var(--border);margin:16px 0}
+
+/* DOT */
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dg{background:var(--accent3);box-shadow:0 0 5px var(--accent3)} .dr{background:#ff4444} .dy{background:var(--gold)}
+
+/* UPLOAD */
+.uz{border:2px dashed var(--border2);border-radius:var(--radius);padding:28px;text-align:center;cursor:pointer;transition:all .18s;position:relative}
+.uz:hover{border-color:var(--accent);background:#7c6fff08}
+.uz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* TIMELINE */
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:1px;background:var(--border)}
+.tli{position:relative;padding-bottom:18px}
+.tld{position:absolute;left:-19px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--accent);border:2px solid var(--bg2)}
+.tlt{font-size:.68rem;color:var(--text3);margin-bottom:3px}
+.tlt2{font-size:.82rem}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:#00000090;backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.mo.open{opacity:1;pointer-events:all}
+.md{background:var(--bg2);border:1px solid var(--border2);border-radius:22px;padding:30px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;transform:scale(.95);transition:transform .2s;scrollbar-width:thin;scrollbar-color:var(--border) transparent;position:relative}
+.mo.open .md{transform:scale(1)}
+.mc{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;padding:4px;line-height:1}
+.mf{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:18px;border-top:1px solid var(--border)}
+
+/* LOGIN */
+#lp{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;transition:opacity .5s,transform .5s}
+#lp.out{opacity:0;transform:scale(1.03);pointer-events:none}
+.lb{background:var(--bg2);border:1px solid var(--border2);border-radius:26px;padding:44px 38px;width:100%;max-width:400px;text-align:center;position:relative}
+.lb-glow{position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:220px;height:220px;background:radial-gradient(#7c6fff33,transparent 70%);pointer-events:none}
+.lb-logo{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:-.05em}
+.lb-logo b{color:var(--accent)}
+.lb-tag{color:var(--text3);font-size:.84rem;margin-bottom:8px}
+.lb-features{display:flex;flex-direction:column;gap:6px;margin:20px 0 28px;text-align:left}
+.lb-feat{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text2)}
+.lb-feat span{font-size:14px}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;padding:13px;border-radius:13px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:500;cursor:pointer;transition:all .18s}
+.google-btn:hover{background:var(--card2);transform:translateY(-1px);box-shadow:0 8px 24px #00000060}
+.lb-terms{font-size:.68rem;color:var(--text3);margin-top:16px;line-height:1.7}
+.lb-terms a{color:var(--accent);text-decoration:none}
+
+/* LOADER */
+.spin{width:18px;height:18px;border:2px solid #ffffff30;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{position:absolute;inset:0;background:#00000060;border-radius:inherit;display:flex;align-items:center;justify-content:center;z-index:10}
+
+/* TOAST */
+#tc{position:fixed;bottom:22px;right:22px;z-index:9998;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius2);padding:11px 16px;display:flex;align-items:center;gap:9px;font-size:.82rem;box-shadow:0 8px 32px #00000070;animation:ti .25s ease;max-width:300px}
+@keyframes ti{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+/* SKILL TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+
+/* AI GLOW BUTTON */
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 #7c6fff40}50%{box-shadow:0 0 0 8px #7c6fff00}}
+.ai-btn{animation:glow 2.5s ease-in-out infinite}
+
+/* SKELETON */
+.sk{background:linear-gradient(90deg,var(--bg3) 25%,var(--card2) 50%,var(--bg3) 75%);background-size:200% 100%;animation:sk 1.5s infinite;border-radius:6px}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+  #main { margin-left: 0; padding: 16px 16px 80px; max-width: 100vw; }
+  .g2,.g3,.g4 { grid-template-columns: 1fr !important; }
+  .lb { padding: 32px 24px; margin: 16px; max-width: calc(100vw - 32px); }
+  .topbar { flex-direction: column; gap: 10px; }
+  .topbar-r { width: 100%; justify-content: flex-end; }
+  #mob-nav { display: flex !important; }
+}
+#mob-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg2); border-top: 1px solid var(--border);
+  z-index: 200; padding: 8px 0 12px;
+  justify-content: space-around;
+}
+.mob-btn {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px; font-size: .6rem; color: var(--text2);
+  cursor: pointer; padding: 4px 10px; border-radius: 8px;
+  border: none; background: none;
+}
+.mob-btn.active { color: var(--accent); }
+.mob-btn span { font-size: 20px; }
+</style>
+</head>
+<body>
+
+<!-- ── CONFIG (set these before deploy) ── -->
+<script>
+const API = window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://jobpilot-backend-production.up.railway.app';
+const GOOGLE_CLIENT_ID = '382905055590-8em6btoluiikg3amjqa6fqk2ij5m1e21.apps.googleusercontent.com';
+const SUPABASE_URL = 'https://fsciwivkplhcjsrqjnmk.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzY2l3aXZrcGxoY2pzcnFqbm1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1Njg0MjIsImV4cCI6MjA4OTE0NDQyMn0.KjzLuqxp2ocv0P0QSp6zjG2kQ087DgUkyQB_uksalH8';
+</script>
+
+<script>
+// Stub functions available immediately — full version in app.js
+function triggerGoogleLogin() {
+  var btn = document.getElementById('login-btn');
+  if (btn) { btn.textContent = 'Opening Google...'; btn.disabled = true; }
+  function tryLogin() {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      google.accounts.id.prompt(function(n) {
+        if (btn) { btn.textContent = 'Continue with Google'; btn.disabled = false; }
+      });
+    } else {
+      setTimeout(tryLogin, 300);
+    }
+  }
+  tryLogin();
+}
+
+function showLoginModal(type) {
+  var el    = document.getElementById('lp-modal-content');
+  var modal = document.getElementById('lp-modal');
+  if (!el || !modal) return;
+  if (type === 'terms') {
+    el.innerHTML = '<h2 style="font-family:Syne,sans-serif;font-size:1.1rem;margin-bottom:16px;color:#eeeef8">Terms of Service</h2>'
+      + '<div style="font-size:.83rem;color:#8888aa;line-height:1.8">'
+      + '<p><b style="color:#eeeef8">1. Acceptance</b><br>Using JobPilot means you accept these terms. Must be 18+ with valid Google account.</p><br>'
+      + '<p><b style="color:#eeeef8">2. Permitted Use</b><br>Personal job-seeking only. No spam or illegal use.</p><br>'
+      + '<p><b style="color:#eeeef8">3. AI Content</b><br>AI-generated content are suggestions. Review before sending.</p><br>'
+      + '<p><a href="/terms.html" target="_blank" style="color:#7c6fff">Read full Terms of Service →</a></p>'
+      + '</div>';
+  } else {
+    el.innerHTML = '<h2 style="font-family:Syne,sans-serif;font-size:1.1rem;margin-bottom:16px;color:#eeeef8">Privacy Policy</h2>'
+      + '<div style="font-size:.83rem;color:#8888aa;line-height:1.8">'
+      + '<p><b style="color:#eeeef8">1. Data We Collect</b><br>Name, email, resume. Gmail read-only for job reply emails only.</p><br>'
+      + '<p><b style="color:#eeeef8">2. How We Use Data</b><br>Solely to power JobPilot. Never sold or shared.</p><br>'
+      + '<p><b style="color:#eeeef8">3. Security</b><br>TLS 1.3 + AES-256 encryption. GDPR compliant.</p><br>'
+      + '<p><a href="/privacy.html" target="_blank" style="color:#7c6fff">Read full Privacy Policy →</a></p>'
+      + '</div>';
+  }
+  modal.style.display = 'flex';
+}
+
+function setMobActive(btn) {
+  document.querySelectorAll('.mob-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+</script>
+
+<!-- ── LOGIN PAGE ── -->
+<div id="lp" style="position:fixed;inset:0;background:#08080f;display:flex;align-items:center;justify-content:center;z-index:9999">
+  <div style="background:#0f0f18;border:1px solid #ffffff20;border-radius:24px;padding:40px 36px;width:100%;max-width:400px;text-align:center;position:relative">
+    
+    <!-- Glow -->
+    <div style="position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(#7c6fff33,transparent 70%);pointer-events:none"></div>
+    
+    <!-- Logo -->
+    <div style="font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;letter-spacing:-.05em;margin-bottom:4px">Job<span style="color:#7c6fff">Pilot</span></div>
+    <div style="color:#44445a;font-size:.84rem;margin-bottom:24px">AI-powered job automation — 24×7</div>
+    
+    <!-- Features -->
+    <div style="text-align:left;margin-bottom:28px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:#8888aa"><span>⚡</span> Auto-apply to 50+ job portals</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:#8888aa"><span>🤖</span> Gemini AI resume builder</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:#8888aa"><span>✉️</span> Auto email HRs with AI</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:#8888aa"><span>📍</span> Nearby part-time job finder</div>
+    </div>
+
+    <!-- GSI Button Container -->
+    <div id="gsi-btn-wrap" style="display:flex;justify-content:center;margin-bottom:12px;min-height:44px"></div>
+
+    <!-- Custom Google Button — always visible, no iframe issues -->
+    <button id="login-btn" onclick="triggerGoogleLogin()" style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px;border-radius:12px;background:#1c1c28;border:1px solid #ffffff25;color:#eeeef8;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;cursor:pointer;transition:all .2s;outline:none" onmouseover="this.style.background='#252535'" onmouseout="this.style.background='#1c1c28'">
+      <svg width="20" height="20" viewBox="0 0 24 24" style="flex-shrink:0">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </button>
+
+    <!-- Terms -->
+    <p style="font-size:.68rem;color:#44445a;margin-top:14px;line-height:1.7">
+      By continuing you agree to our
+      <a href="#" onclick="showLoginModal('terms');return false;" style="color:#7c6fff;text-decoration:none">Terms</a> &
+      <a href="#" onclick="showLoginModal('privacy');return false;" style="color:#7c6fff;text-decoration:none">Privacy Policy</a>
+    </p>
+  </div>
+</div>
+
+<!-- Terms/Privacy Modal -->
+<div id="lp-modal" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:#000000bb;z-index:99999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#0f0f18;border:1px solid #ffffff20;border-radius:20px;padding:28px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;position:relative">
+    <button onclick="document.getElementById('lp-modal').style.display='none'" style="position:absolute;top:12px;right:14px;background:none;border:none;color:#8888aa;cursor:pointer;font-size:20px;line-height:1">✕</button>
+    <div id="lp-modal-content"></div>
+  </div>
+</div>
+<!-- ── SIDEBAR ── -->
+<div id="sidebar">
+  <div class="logo">
+    <div class="logo-mark">🚀</div>
+    <div><div class="logo-name">Job<b>Pilot</b> <span class="logo-badge">AI</span></div></div>
+  </div>
+
+  <div class="nav-sec">
+    <div class="nav-lbl">Overview</div>
+    <div class="ni active" onclick="nav('dash')"><span class="ico">🏠</span> Dashboard</div>
+    <div class="ni" onclick="nav('auto')"><span class="ico">⚡</span> Automation <span class="badge green">ON</span></div>
+  </div>
+  <div class="nav-sec" style="margin-top:6px">
+    <div class="nav-lbl">Jobs</div>
+    <div class="ni" onclick="nav('search')"><span class="ico">🔍</span> Job Search</div>
+    <div class="ni" onclick="nav('applied')"><span class="ico">📤</span> Applied <span class="badge" id="sb-applied">0</span></div>
+    <div class="ni" onclick="nav('parttime')"><span class="ico">🕐</span> Part-Time</div>
+    <div class="ni" onclick="nav('companies')"><span class="ico">🏢</span> Companies</div>
+  </div>
+  <div class="nav-sec" style="margin-top:6px">
+    <div class="nav-lbl">AI Tools</div>
+    <div class="ni" onclick="nav('resume')"><span class="ico">📄</span> AI Resume</div>
+    <div class="ni" onclick="nav('inbox')"><span class="ico">✉️</span> Inbox <span class="badge" id="sb-inbox">0</span></div>
+  </div>
+  <div class="nav-sec" style="margin-top:6px">
+    <div class="nav-lbl">Account</div>
+    <div class="ni" onclick="nav('profile')"><span class="ico">👤</span> Profile</div>
+    <div class="ni" onclick="nav('settings')"><span class="ico">⚙️</span> Settings</div>
+    <div class="ni" onclick="nav('privacy')"><span class="ico">🔒</span> Privacy</div>
+    <div class="ni" onclick="nav('terms')"><span class="ico">📋</span> Terms</div>
+  </div>
+
+  <div class="sb-footer">
+    <div class="sb-profile" onclick="nav('profile')">
+      <div class="ava" id="sb-ava"><span id="sb-initials">?</span></div>
+      <div>
+        <div class="sb-name" id="sb-uname">Loading...</div>
+        <div class="sb-role"><span class="dot dg"></span> Auto Active</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div id="main">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="page active" id="page-dash">
+  <div class="topbar">
+    <div>
+      <div class="page-title">Good <span id="greeting">morning</span>, <span id="dash-name">there</span> 👋</div>
+      <div class="page-sub">Your automation is running — 24×7</div>
+    </div>
+    <div class="topbar-r">
+      <div style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 13px;font-size:.8rem">
+        <span class="dot dg"></span> Live
+      </div>
+      <button class="btn btn-p" onclick="nav('auto')">⚡ Automation</button>
+    </div>
+  </div>
+
+  <div class="g4" style="margin-bottom:20px">
+    <div class="stat"><div class="sl">Applied</div><div class="sv" style="color:#b794f4" id="d-applied">—</div><div class="sd up" id="d-applied-d">Loading...</div></div>
+    <div class="stat"><div class="sl">Emails Sent</div><div class="sv" style="color:var(--accent3)" id="d-emails">—</div><div class="sd up" id="d-emails-d">Loading...</div></div>
+    <div class="stat"><div class="sl">Replies</div><div class="sv" style="color:var(--gold)" id="d-replies">—</div><div class="sd up" id="d-replies-d">Loading...</div></div>
+    <div class="stat"><div class="sl">Interviews</div><div class="sv" style="color:var(--accent2)" id="d-interviews">—</div><div class="sd up" id="d-int-d">Loading...</div></div>
+  </div>
+
+  <div class="g2" style="margin-bottom:20px">
+    <div class="card">
+      <div class="sh"><div><div class="st">🤖 Live Activity</div><div class="ss">What JobPilot did for you</div></div><span class="chip chip-g">● Running</span></div>
+      <div class="tl" id="d-activity">
+        <div class="tli"><div class="tld"></div><div class="tlt">Just now</div><div class="tlt2">🔍 Searching for jobs matching your profile...</div></div>
+        <div class="tli"><div class="tld" style="background:var(--accent3)"></div><div class="tlt">Loading</div><div class="tlt2 sk" style="height:14px;width:80%"></div></div>
+        <div class="tli"><div class="tld" style="background:var(--gold)"></div><div class="tlt">Loading</div><div class="tlt2 sk" style="height:14px;width:60%"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sh"><div class="st">📬 Recent Replies</div><button class="btn btn-g btn-sm" onclick="nav('inbox')">View All</button></div>
+      <div id="d-mails">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="sk" style="height:60px;border-radius:10px"></div>
+          <div class="sk" style="height:60px;border-radius:10px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sh"><div class="st">🎯 Latest Jobs For You</div><button class="btn btn-g btn-sm" onclick="nav('search')">View All</button></div>
+    <div class="g3" id="d-jobs">
+      <div class="sk" style="height:140px;border-radius:14px"></div>
+      <div class="sk" style="height:140px;border-radius:14px"></div>
+      <div class="sk" style="height:140px;border-radius:14px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AUTOMATION ═══ -->
+<div class="page" id="page-auto">
+  <div class="topbar">
+    <div><div class="page-title">⚡ Automation Engine</div><div class="page-sub">Set once — runs 24×7 automatically</div></div>
+    <div class="topbar-r">
+      <div id="auto-status-badge" style="display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:7px 13px;font-size:.8rem"><span class="dot dg"></span> Active</div>
+      <button class="btn btn-d btn-sm" onclick="stopAuto()">⏹ Stop</button>
+    </div>
+  </div>
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="sh"><div class="st">👤 Your Profile</div></div>
+        <div class="fg"><label class="fl">Full Name</label><input class="fi" id="a-name" placeholder="Your name"></div>
+        <div class="fg"><label class="fl">Target Job Role</label><input class="fi" id="a-role" placeholder="e.g. React Developer"></div>
+        <div class="fg"><label class="fl">Skills (comma separated)</label><input class="fi" id="a-skills" placeholder="React, Node.js, Python..."></div>
+        <div class="fg"><label class="fl">Experience Level</label>
+          <select class="fs" id="a-exp">
+            <option>Fresher (0-1 yr)</option>
+            <option selected>Junior (1-3 yrs)</option>
+            <option>Mid (3-5 yrs)</option>
+            <option>Senior (5+ yrs)</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Location</label><input class="fi" id="a-loc" placeholder="Chennai, Tamil Nadu"></div>
+        <div class="fg"><label class="fl">Email (Gmail — for HR mails)</label><input class="fi" id="a-email" placeholder="you@gmail.com" type="email"></div>
+        <button class="btn btn-p" style="width:100%" onclick="saveProfile()">💾 Save Profile</button>
+      </div>
+      <div class="card">
+        <div class="sh"><div class="st">📄 Resume</div></div>
+        <div class="uz" id="auto-resume-zone">
+          <input type="file" accept=".pdf,.docx" onchange="handleResumeUpload(this,'auto')">
+          <div style="font-size:2rem;margin-bottom:6px">📄</div>
+          <div style="font-weight:500" id="auto-resume-name">Drop resume or click to upload</div>
+          <div style="font-size:.76rem;color:var(--text3);margin-top:3px">PDF or DOCX</div>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:7px">
+          <button class="btn btn-g btn-sm" onclick="nav('resume')">✨ AI Resume Builder</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="sh"><div class="st">⚙️ Automation Controls</div></div>
+        <div class="tw"><div><h4>🔍 Auto Job Search</h4><p>Search 50+ portals every hour</p></div><div class="tg on" onclick="this.classList.toggle('on')" id="tg-search"></div></div>
+        <div class="tw"><div><h4>📤 Auto Apply</h4><p>Apply to matching jobs automatically</p></div><div class="tg on" onclick="this.classList.toggle('on')" id="tg-apply"></div></div>
+        <div class="tw"><div><h4>✉️ Auto Email HR</h4><p>Send AI-crafted emails to recruiters</p></div><div class="tg on" onclick="this.classList.toggle('on')" id="tg-email"></div></div>
+        <div class="tw"><div><h4>🕐 Part-Time Detector</h4><p>Find nearby part-time opportunities</p></div><div class="tg on" onclick="this.classList.toggle('on')" id="tg-pt"></div></div>
+        <div class="tw"><div><h4>📬 Reply Monitor</h4><p>Filter job-related emails from Gmail</p></div><div class="tg on" onclick="this.classList.toggle('on')" id="tg-reply"></div></div>
+        <div class="tw"><div><h4>🤖 AI Resume Per Job</h4><p>Tailor resume for each application</p></div><div class="tg" onclick="this.classList.toggle('on')" id="tg-aresume"></div></div>
+        <div class="div"></div>
+        <div class="fg"><label class="fl">Nearby Radius (km)</label><input class="fi" type="number" id="a-radius" value="25"></div>
+        <div class="fg"><label class="fl">Job Type</label>
+          <select class="fs" id="a-jtype">
+            <option>Full-Time + Part-Time</option>
+            <option>Full-Time Only</option>
+            <option>Part-Time Only</option>
+            <option>Remote Only</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Email Tone</label>
+          <select class="fs" id="a-tone">
+            <option selected>Professional</option>
+            <option>Friendly</option>
+            <option>Formal</option>
+          </select>
+        </div>
+        <button class="btn btn-p" style="width:100%" onclick="startAuto()">⚡ Start Automation</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ JOB SEARCH ═══ -->
+<div class="page" id="page-search">
+  <div class="topbar">
+    <div><div class="page-title">🔍 Job Search</div><div class="page-sub" id="search-count">Searching real jobs via Adzuna...</div></div>
+    <div class="topbar-r">
+      <button class="btn btn-g" onclick="loadJobs()">🔄 Refresh</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:18px">
+    <input class="fi" style="flex:1" placeholder="Job title, skill..." id="sq" onkeydown="if(event.key==='Enter')loadJobs()">
+    <input class="fi" style="width:180px" placeholder="Location" id="sloc" value="Chennai">
+    <select class="fs" style="width:150px" id="sjtype">
+      <option value="">All Types</option>
+      <option value="full">Full-Time</option>
+      <option value="part">Part-Time</option>
+    </select>
+    <button class="btn btn-p" onclick="loadJobs()">🔍 Search</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this)">All Jobs</button>
+    <button class="tab" onclick="switchTab(this)">Full-Time</button>
+    <button class="tab" onclick="switchTab(this)">Part-Time</button>
+    <button class="tab" onclick="switchTab(this)">Remote</button>
+  </div>
+  <div class="g2" id="job-list">
+    <div class="sk" style="height:160px;border-radius:14px"></div>
+    <div class="sk" style="height:160px;border-radius:14px"></div>
+    <div class="sk" style="height:160px;border-radius:14px"></div>
+    <div class="sk" style="height:160px;border-radius:14px"></div>
+  </div>
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:20px">
+    <button class="btn btn-g" id="prev-btn" onclick="changePage(-1)" disabled>← Prev</button>
+    <span style="display:flex;align-items:center;font-size:.84rem;color:var(--text2)" id="page-info">Page 1</span>
+    <button class="btn btn-g" id="next-btn" onclick="changePage(1)">Next →</button>
+  </div>
+</div>
+
+<!-- ═══ APPLIED ═══ -->
+<div class="page" id="page-applied">
+  <div class="topbar"><div><div class="page-title">📤 Applied Jobs</div><div class="page-sub">Tracking all your applications</div></div></div>
+  <div class="g4" style="margin-bottom:20px">
+    <div class="stat"><div class="sl">Total Applied</div><div class="sv" style="color:#b794f4" id="apl-total">0</div></div>
+    <div class="stat"><div class="sl">Under Review</div><div class="sv" style="color:var(--gold)" id="apl-review">0</div></div>
+    <div class="stat"><div class="sl">Interviews</div><div class="sv" style="color:var(--accent3)" id="apl-int">0</div></div>
+    <div class="stat"><div class="sl">Rejected</div><div class="sv" style="color:var(--accent2)" id="apl-rej">0</div></div>
+  </div>
+  <div id="applied-list"><div class="sk" style="height:60px;border-radius:10px;margin-bottom:8px"></div><div class="sk" style="height:60px;border-radius:10px;margin-bottom:8px"></div></div>
+</div>
+
+<!-- ═══ PART TIME ═══ -->
+<div class="page" id="page-parttime">
+  <div class="topbar">
+    <div><div class="page-title">🕐 Part-Time Jobs</div><div class="page-sub">Nearby opportunities based on your location</div></div>
+    <button class="btn btn-p" onclick="loadPartTime()">📍 Find Nearby</button>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:20px">
+    <input class="fi" style="flex:1" placeholder="What job?" id="pt-q" value="developer">
+    <input class="fi" style="width:200px" placeholder="Location" id="pt-loc" value="Chennai">
+    <input class="fi" style="width:100px" type="number" placeholder="km" id="pt-r" value="25">
+    <button class="btn btn-g" onclick="loadPartTime()">🔍 Search</button>
+  </div>
+  <div class="g2" id="pt-list"><div class="sk" style="height:140px;border-radius:14px"></div><div class="sk" style="height:140px;border-radius:14px"></div></div>
+</div>
+
+<!-- ═══ COMPANIES ═══ -->
+<div class="page" id="page-companies">
+  <div class="topbar">
+    <div><div class="page-title">🏢 Company Finder</div><div class="page-sub">Nearby companies — careers & job links</div></div>
+    <button class="btn btn-p" onclick="openModal('m-company')">➕ Add to Watch</button>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:20px">
+    <input class="fi" style="flex:1" placeholder="Search companies..." id="co-q" value="IT company">
+    <input class="fi" style="width:180px" placeholder="Location" id="co-loc" value="Chennai">
+    <input class="fi" style="width:100px" type="number" placeholder="km" id="co-r" value="25">
+    <button class="btn btn-p" onclick="loadCompanies()">🔍 Find</button>
+  </div>
+  <div class="g3" id="co-list"><div class="sk" style="height:140px;border-radius:14px"></div><div class="sk" style="height:140px;border-radius:14px"></div><div class="sk" style="height:140px;border-radius:14px"></div></div>
+</div>
+
+<!-- ═══ AI RESUME ═══ -->
+<div class="page" id="page-resume">
+  <div class="topbar"><div><div class="page-title">🤖 AI Resume Builder</div><div class="page-sub">Gemini AI — ATS-optimized, job-tailored</div></div></div>
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="sh"><div class="st">📤 Upload Existing Resume</div></div>
+        <div class="uz">
+          <input type="file" accept=".pdf,.docx" onchange="handleResumeUpload(this,'ai')">
+          <div style="font-size:1.8rem;margin-bottom:6px">📤</div>
+          <div style="font-weight:500" id="ai-resume-name">Upload existing resume (optional)</div>
+          <div style="font-size:.76rem;color:var(--text3);margin-top:3px">AI will enhance it for the target role</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sh"><div class="st">🎯 Job Details</div></div>
+        <div class="fg"><label class="fl">Your Name</label><input class="fi" id="r-name" placeholder="Full name"></div>
+        <div class="fg"><label class="fl">Target Role</label><input class="fi" id="r-role" placeholder="e.g. React Developer"></div>
+        <div class="fg"><label class="fl">Your Skills</label><input class="fi" id="r-skills" placeholder="React, Node.js, Python..."></div>
+        <div class="fg"><label class="fl">Education</label><input class="fi" id="r-edu" placeholder="B.Tech CSE, Anna University, 2022"></div>
+        <div class="fg"><label class="fl">Location</label><input class="fi" id="r-loc" placeholder="Chennai, Tamil Nadu"></div>
+        <div class="fg"><label class="fl">Experience Level</label>
+          <select class="fs" id="r-exp">
+            <option value="Fresher">Fresher — 1 page resume</option>
+            <option value="Junior" selected>Junior (1-3 yrs) — 1 page</option>
+            <option value="Mid">Mid-level — 1-2 pages</option>
+            <option value="Senior">Senior — 2 pages</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Job Description (paste here)</label><textarea class="ft" id="r-jd" style="min-height:100px" placeholder="Paste the job description here — AI will tailor your resume..."></textarea></div>
+        <button class="btn btn-p ai-btn" style="width:100%" onclick="buildResume()" id="r-btn">✨ Generate AI Resume</button>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="min-height:500px">
+        <div class="sh">
+          <div><div class="st">👁 Resume Preview</div><div class="ss" id="ats-score"></div></div>
+          <div style="display:flex;gap:7px">
+            <button class="btn btn-g btn-sm" onclick="downloadResume()">⬇ Download</button>
+            <button class="btn btn-s btn-sm" onclick="openEmailWithResume()">📧 Email + Resume</button>
+          </div>
+        </div>
+        <div id="r-preview" style="background:var(--bg3);border-radius:var(--radius2);padding:20px;min-height:400px;border:1px solid var(--border)">
+          <div style="text-align:center;padding:40px;color:var(--text3)">
+            <div style="font-size:2.5rem;margin-bottom:10px;opacity:.4">🤖</div>
+            <div>Fill in the details and click Generate</div>
+            <div style="font-size:.78rem;margin-top:4px">Powered by Gemini AI</div>
+          </div>
+        </div>
+        <div id="missing-skills-section" style="margin-top:14px;display:none">
+          <div class="st" style="font-size:.82rem;margin-bottom:8px">⚠️ Missing Skills from JD</div>
+          <div class="tags" id="missing-skills-tags"></div>
+          <button class="btn btn-g btn-sm" style="margin-top:8px" onclick="addMissingSkills()">+ Add These to Resume</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INBOX ═══ -->
+<div class="page" id="page-inbox">
+  <div class="topbar">
+    <div><div class="page-title">✉️ Job Email Inbox</div><div class="page-sub">AI-filtered — job replies only from Gmail</div></div>
+    <div class="topbar-r">
+      <button class="btn btn-g" onclick="loadEmails()">🔄 Refresh</button>
+      <button class="btn btn-p" onclick="openModal('m-email')">✍️ Compose</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this)">All Emails</button>
+    <button class="tab" onclick="switchTab(this)">Unread</button>
+    <button class="tab" onclick="switchTab(this)">Interviews</button>
+    <button class="tab" onclick="switchTab(this)">Sent</button>
+  </div>
+  <div id="inbox-list"><div class="sk" style="height:60px;border-radius:10px;margin-bottom:7px"></div><div class="sk" style="height:60px;border-radius:10px;margin-bottom:7px"></div><div class="sk" style="height:60px;border-radius:10px"></div></div>
+</div>
+
+<!-- ═══ PROFILE ═══ -->
+<div class="page" id="page-profile">
+  <div class="topbar"><div><div class="page-title">👤 Profile</div><div class="page-sub">Your professional identity for all applications</div></div><button class="btn btn-p" onclick="saveProfileFull()">💾 Save</button></div>
+  <div class="g2">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+        <div class="ava" style="width:56px;height:56px;font-size:1.3rem" id="p-ava"><span id="p-initials">?</span></div>
+        <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem" id="p-dname">Your Name</div><div style="color:var(--text3);font-size:.8rem" id="p-drole">Your Role</div></div>
+      </div>
+      <div class="fg"><label class="fl">Full Name</label><input class="fi" id="p-name" oninput="updatePDisp()"></div>
+      <div class="fg"><label class="fl">Email</label><input class="fi" id="p-email" type="email"></div>
+      <div class="fg"><label class="fl">Phone</label><input class="fi" id="p-phone" placeholder="+91 98765 43210"></div>
+      <div class="fg"><label class="fl">Location</label><input class="fi" id="p-loc"></div>
+      <div class="fg"><label class="fl">LinkedIn</label><input class="fi" id="p-li" placeholder="linkedin.com/in/yourname"></div>
+      <div class="fg"><label class="fl">GitHub</label><input class="fi" id="p-gh" placeholder="github.com/yourname"></div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="fg"><label class="fl">Target Job Role</label><input class="fi" id="p-role" oninput="updatePDisp()"></div>
+        <div class="fg"><label class="fl">Skills</label><input class="fi" id="p-skills"></div>
+        <div class="fg"><label class="fl">Experience</label><select class="fs" id="p-exp"><option>Fresher</option><option>1 yr</option><option selected>2 yrs</option><option>3-5 yrs</option><option>5+ yrs</option></select></div>
+        <div class="fg"><label class="fl">Expected Salary</label><input class="fi" id="p-sal" placeholder="e.g. 8-12 LPA"></div>
+        <div class="fg"><label class="fl">Work Mode</label><select class="fs"><option>Any</option><option>Remote</option><option>On-site</option><option>Hybrid</option></select></div>
+        <div class="fg"><label class="fl">Professional Summary</label><textarea class="ft" id="p-bio" placeholder="Brief professional summary..."></textarea></div>
+      </div>
+      <div class="card">
+        <div class="st" style="margin-bottom:12px">📧 Default Email Template</div>
+        <textarea class="ft" id="p-template" style="min-height:130px">Dear Hiring Manager,
+
+I am excited to apply for the [Role] position at [Company]. With my experience in [Skills], I am confident I can contribute effectively.
+
+Please find my resume attached. Looking forward to hearing from you.
+
+Best regards,
+[Name]</textarea>
+        <div style="font-size:.72rem;color:var(--text3);margin-top:6px">💡 [Role], [Company], [Skills], [Name] auto-filled per application</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="page" id="page-settings">
+  <div class="topbar"><div><div class="page-title">⚙️ Settings</div><div class="page-sub">Customize JobPilot</div></div></div>
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="st" style="margin-bottom:14px">🔔 Notifications</div>
+        <div class="tw"><div><h4>New Job Alerts</h4><p>When matching jobs are found</p></div><div class="tg on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="tw"><div><h4>Reply Notifications</h4><p>When HR replies to your email</p></div><div class="tg on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="tw"><div><h4>Interview Reminders</h4><p>Before scheduled interviews</p></div><div class="tg on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="tw"><div><h4>Daily Summary</h4><p>Daily application report</p></div><div class="tg" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <div class="card">
+        <div class="st" style="margin-bottom:14px">🔐 Connected Accounts</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:9px;font-size:.84rem">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google Account <span id="s-gmail" style="color:var(--text3)"></span>
+          </div>
+          <span class="chip chip-g">Connected</span>
+        </div>
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px">
+          <button class="btn btn-g btn-sm" onclick="doLogout()">🚪 Logout</button>
+          <button class="btn btn-d btn-sm" onclick="toast('Contact support to delete account','red')">🗑 Delete Account</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="st" style="margin-bottom:14px">🤖 AI Settings</div>
+        <div class="fg"><label class="fl">AI Aggressiveness</label><select class="fs"><option>Conservative</option><option selected>Balanced</option><option>Aggressive</option></select></div>
+        <div class="fg"><label class="fl">Email Tone</label><select class="fs"><option selected>Professional</option><option>Friendly</option><option>Formal</option></select></div>
+        <div class="fg"><label class="fl">Resume Format</label><select class="fs"><option selected>ATS-Optimized</option><option>Modern Design</option><option>Minimalist</option></select></div>
+        <div class="tw"><div><h4>Auto-tailor Resume</h4><p>Customize per job description</p></div><div class="tg on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <div class="card">
+        <div class="st" style="margin-bottom:14px">🔑 API Status</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:.82rem">
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Gemini AI (4 keys)</span><span class="chip chip-g">✅ Active</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Google OAuth</span><span class="chip chip-g">✅ Connected</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Adzuna Jobs</span><span class="chip chip-g" id="az-status">Checking...</span></div>
+          <div style="display:flex;justify-content:space-between;padding:8px 0"><span>Google Places</span><span class="chip chip-g">✅ Active</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PRIVACY ═══ -->
+<div class="page" id="page-privacy">
+  <div class="topbar"><div><div class="page-title">🔒 Privacy Policy</div><div class="page-sub">Effective January 1, 2025</div></div></div>
+  <div class="card" style="max-width:700px">
+    <div class="st" style="margin-bottom:16px">JobPilot Privacy Policy</div>
+    <div style="color:var(--text2);font-size:.84rem;line-height:1.85">
+      <p><b style="color:var(--text)">1. Data We Collect</b><br>Name, email, resume, job preferences, and automation settings. Gmail is accessed read-only for job reply emails only — we never read, store, or send personal emails.</p>
+      <div class="div"></div>
+      <p><b style="color:var(--text)">2. How We Use Data</b><br>Solely to power JobPilot — finding jobs, sending application emails, building resumes, and showing relevant replies. We never sell or share your data.</p>
+      <div class="div"></div>
+      <p><b style="color:var(--text)">3. Security</b><br>All data is encrypted in transit (TLS 1.3) and at rest (AES-256). Resumes deleted on account deletion. Compliant with GDPR, CCPA, and Indian IT Act 2000.</p>
+      <div class="div"></div>
+      <p><b style="color:var(--text)">4. Third Parties</b><br>Google OAuth (read-only scope), Adzuna (public job data), Google Places (location). No personal data shared.</p>
+      <div class="div"></div>
+      <p><b style="color:var(--text)">5. Your Rights</b><br>Export, modify, or delete all data anytime from Settings. Contact: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1363617a6572706a53797c71637a7f7c673d727a">[email&#160;protected]</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TERMS ═══ -->
+<div class="page" id="page-terms">
+  <div class="topbar"><div><div class="page-title">📋 Terms & Conditions</div><div class="page-sub">Effective January 1, 2025</div></div></div>
+  <div class="card" style="max-width:700px">
+    <div class="st" style="margin-bottom:16px">Terms of Service</div>
+    <div style="color:var(--text2);font-size:.84rem;line-height:1.85">
+      <p><b style="color:var(--text)">1. Acceptance</b><br>Using JobPilot means you accept these terms. You must be 18+ with a valid Google account.</p>
+      <div class="div"></div>
+      <p><b style="color:var(--text)">2. Permitted Use</b><br>Personal job-seeking only. No spam, bulk outreach, or illegal use. You're responsible for accuracy of your profile and resume.</p>
+      <div class="div"></div>
+      <p><b style="color:var(--text)">3. AI Content</b><br>AI-generated resumes and emails are suggestions. Review before sending. JobPilot is not liable for application outcomes.</p>
+      <div class="div"></div>
+      <p><b style="color:var(--text)">4. Availability</b><br>We aim for 99.9% uptime. Job listings are from third-party sources and may not always be current.</p>
+      <div class="div"></div>
+      <p><b style="color:var(--text)">5. Termination</b><br>We may suspend accounts violating these terms. You can delete your account anytime from Settings.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- #main -->
+
+<!-- ── MODALS ── -->
+
+<!-- JOB DETAIL MODAL -->
+<div class="mo" id="m-job">
+  <div class="md" style="max-width:580px">
+    <button class="mc" onclick="closeModal('m-job')">✕</button>
+    <div id="m-job-content"></div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeModal('m-job')">Close</button>
+      <button class="btn btn-g" onclick="aiMatchJob()">🤖 AI Match</button>
+      <button class="btn btn-s" onclick="saveCurrentJob()">🔖 Save</button>
+      <button class="btn btn-p" id="apply-btn" onclick="applyCurrentJob()">📤 Apply Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL COMPOSE MODAL -->
+<div class="mo" id="m-email">
+  <div class="md">
+    <button class="mc" onclick="closeModal('m-email')">✕</button>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:4px">✍️ Compose Email</div>
+    <div style="font-size:.8rem;color:var(--text2);margin-bottom:20px">AI crafts a professional application email</div>
+    <div class="fg"><label class="fl">To (HR Email)</label><input class="fi" id="e-to" placeholder="hr@company.com" type="email"></div>
+    <div class="fg"><label class="fl">Job Title</label><input class="fi" id="e-jt" placeholder="e.g. React Developer"></div>
+    <div class="fg"><label class="fl">Company Name</label><input class="fi" id="e-co" placeholder="Company name"></div>
+    <div class="fg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <label class="fl" style="margin:0">Email Subject</label>
+      </div>
+      <input class="fi" id="e-sub" placeholder="Application for React Developer – Your Name">
+    </div>
+    <div class="fg">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <label class="fl" style="margin:0">Email Body</label>
+        <button class="btn btn-g btn-sm" onclick="aiGenerateEmail()" id="ai-email-btn">🤖 AI Generate</button>
+      </div>
+      <textarea class="ft" id="e-body" style="min-height:150px" placeholder="Your email body..."></textarea>
+    </div>
+    <div class="tw"><div><h4>📎 Attach Resume</h4><p>Auto-attach your resume</p></div><div class="tg on" onclick="this.classList.toggle('on')" id="tg-attach"></div></div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeModal('m-email')">Cancel</button>
+      <button class="btn btn-p" onclick="sendEmail()" id="send-btn">📤 Send Email</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPANY WATCH MODAL -->
+<div class="mo" id="m-company">
+  <div class="md">
+    <button class="mc" onclick="closeModal('m-company')">✕</button>
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:4px">➕ Watch a Company</div>
+    <div style="font-size:.8rem;color:var(--text2);margin-bottom:20px">JobPilot monitors their careers page 24×7</div>
+    <div class="fg"><label class="fl">Company Name</label><input class="fi" id="c-name" placeholder="e.g. Zoho Corporation"></div>
+    <div class="fg"><label class="fl">Careers Page URL</label><input class="fi" id="c-url" placeholder="https://careers.company.com" type="url"></div>
+    <div class="fg"><label class="fl">Role to Watch For</label><input class="fi" id="c-role" placeholder="e.g. Frontend Developer"></div>
+    <div class="mf">
+      <button class="btn btn-g" onclick="closeModal('m-company')">Cancel</button>
+      <button class="btn btn-p" onclick="saveCompanyWatch()">👁 Start Watching</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="tc"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="/app.js" defer></script>
+</body>
+</html>
