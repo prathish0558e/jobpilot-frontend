@@ -282,17 +282,41 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 // Stub functions available immediately — full version in app.js
 function triggerGoogleLogin() {
   var btn = document.getElementById('login-btn');
-  if (btn) { btn.textContent = 'Opening Google...'; btn.disabled = true; }
-  function tryLogin() {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-      google.accounts.id.prompt(function(n) {
+  if (btn) { btn.innerHTML = '<span style="opacity:.6">Opening Google...</span>'; btn.disabled = true; }
+
+  function doPrompt() {
+    // Make sure GSI is initialized with correct client_id before prompting
+    try {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: function(response) {
+          if (btn) { btn.textContent = 'Continue with Google'; btn.disabled = false; }
+          // Call app.js handler if available
+          if (typeof onGoogleCredential === 'function') {
+            onGoogleCredential(response);
+          }
+        },
+        auto_select: false,
+        ux_mode: 'popup'
+      });
+      google.accounts.id.prompt(function(notification) {
         if (btn) { btn.textContent = 'Continue with Google'; btn.disabled = false; }
       });
-    } else {
-      setTimeout(tryLogin, 300);
+    } catch(e) {
+      console.error('GSI error:', e);
+      if (btn) { btn.textContent = 'Continue with Google'; btn.disabled = false; }
+      alert('Google login error. Please refresh and try again.');
     }
   }
-  tryLogin();
+
+  function waitForGSI() {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      doPrompt();
+    } else {
+      setTimeout(waitForGSI, 200);
+    }
+  }
+  waitForGSI();
 }
 
 function showLoginModal(type) {
@@ -361,8 +385,8 @@ function setMobActive(btn) {
     <!-- Terms -->
     <p style="font-size:.68rem;color:#44445a;margin-top:14px;line-height:1.7">
       By continuing you agree to our
-      <a href="#" onclick="showLoginModal('terms');return false;" style="color:#7c6fff;text-decoration:none">Terms</a> &
-      <a href="#" onclick="showLoginModal('privacy');return false;" style="color:#7c6fff;text-decoration:none">Privacy Policy</a>
+      <a href="/terms.html" target="_blank" style="color:#7c6fff;text-decoration:none">Terms</a> &
+      <a href="/privacy.html" target="_blank" style="color:#7c6fff;text-decoration:none">Privacy Policy</a>
     </p>
   </div>
 </div>
